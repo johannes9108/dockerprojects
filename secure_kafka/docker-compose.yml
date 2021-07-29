@@ -1,0 +1,83 @@
+---
+version: '2'
+services:
+  zookeeper:
+    image: strimzi/kafka:0.19.0-kafka-2.5.0
+    hostname: zookeeper
+    container_name: zookeeper_secure
+    command: [
+      "sh", "-c",
+      "bin/zookeeper-server-start.sh config/zookeeper.properties"
+    ]
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      LOG_DIR: "/tmp/logs"
+
+  broker1:
+    image: strimzi/kafka:0.19.0-kafka-2.5.0
+    hostname: broker1
+    container_name: broker1_secure
+    command: [
+      "sh", "-c",
+      "bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}"
+    ]
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092
+      KAFKA_LISTENERS: PLAINTEXT://broker1:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_KEY_PASSWORD:
+      LOG_DIR: "/tmp/logs"
+    volumes:
+      - broker1 :/home/node/app
+  # broker2:
+  #   image: strimzi/kafka:0.19.0-kafka-2.5.0
+  #   hostname: broker2
+  #   container_name: broker2_secure
+  #   command: [
+  #     "sh", "-c",
+  #     "bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}"
+  #   ]
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - "9093:9093"
+  #   environment:
+  #     KAFKA_BROKER_ID: 2
+  #     KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, SSL:SSL
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:29093,SSL://broker2:9093
+  #     KAFKA_LISTENERS: PLAINTEXT://broker2:29093,SSL://broker2:9093
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  #     LOG_DIR: "/tmp/logs"
+  # broker3:
+  #   image: strimzi/kafka:0.19.0-kafka-2.5.0
+  #   hostname: broker3
+  #   container_name: broker3_secure
+  #   command: [
+  #     "sh", "-c",
+  #     "bin/kafka-server-start.sh config/server.properties --override listeners=$${KAFKA_LISTENERS} --override advertised.listeners=$${KAFKA_ADVERTISED_LISTENERS} --override zookeeper.connect=$${KAFKA_ZOOKEEPER_CONNECT}"
+  #   ]
+  #   depends_on:
+  #     - zookeeper
+  #   ports:
+  #     - "9094:9094"
+  #   environment:
+  #     KAFKA_BROKER_ID: 3
+  #     KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+  #     KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT, SSL:SSL
+  #     KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:29094,SSL://broker3:9094
+  #     KAFKA_LISTENERS: PLAINTEXT://broker3:29094,SSL://broker3:9094
+  #     KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  #     KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+  #     LOG_DIR: "/tmp/logs"
